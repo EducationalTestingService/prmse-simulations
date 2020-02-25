@@ -14,5 +14,9 @@ Create an environment using requirements file:
 
 `conda create -n prmse -c conda-forge -c ets python=3.6 --file requirements.txt`
 
+## Data
+
+One drive folder: https://etsorg1-my.sharepoint.com/:f:/g/personal/aloukina_ets_org/EpfEwBs2FT5Gpvfive_L3GQBrB4fV3Z5eyjve4luKarxwA?e=pf7bkg
+
 
 
