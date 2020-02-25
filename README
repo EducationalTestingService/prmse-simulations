@@ -1,0 +1,18 @@
+# PRMSE paper
+
+This is a repository for work on PRMSE paper. 
+
+## Paper
+
+The paper draft is on Overleaf: 
+
+https://www.overleaf.com/3645379311byhfvpvjczht
+
+## Setting up
+
+Create an environment using requirements file:
+
+`conda create -n prmse -c conda-forge -c ets python=3.6 --file requirements.txt`
+
+
+
