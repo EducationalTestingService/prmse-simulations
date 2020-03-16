@@ -49,7 +49,8 @@ The notebook used to simulate the data using the configuration settings stored i
 The json file defines various parameters for the simulation.
 
 Note that the data is simulated by sampling from normal distribution using fixed seed. 
-Changes to the code in this notebook are likely to change the simulated data.
+Changes to the code in this notebook are likely to change the simulated data. 
+The data is stored on Bitbucket to track any changes.
 
 The rest of the notebook are organized by how many human raters and systems are used in each analyses. 
 
