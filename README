@@ -2,17 +2,64 @@
 
 This is a repository for work on PRMSE paper. 
 
+## Setting up
+
+At this point, the changes in RSMTool necessary to compute prmse are in a separate branch `generalized-version-of-prmse`.
+
+To create the environment:
+
+1. follow steps 1-5 here. 
+
+https://rsmtool.readthedocs.io/en/stable/contributing.html#setting-up
+
+2. Run `git checkout `generalized-version-of-prmse`
+
+3. Checkout paper directory from overleaf (see link below) in the directory of your choice.
+
+4. Symlink the top paper directory to `prmse_paper/paper_overleaf`. This way the
+ figures will be saved directly to the paper director. 
+
 ## Paper
 
 The paper draft is on Overleaf: 
 
 https://www.overleaf.com/3645379311byhfvpvjczht
 
-## Setting up
+## Analyses
 
-Create an environment using requirements file:
 
-`conda create -n prmse -c conda-forge -c ets python=3.6 --file requirements.txt`
+### Simulations
+
+
+Simulated data is stored under `data`. 
+There are three files:
+
+`data.csv` - main data file with human and system scores for each response
+
+`raters.csv` - metadata file containing information about simulated raters
+
+`systems.csv` - metadata file containing information about simulated systems
+
+
+The code for simulations is divided into notebooks. 
+
+`1_simulate_data`
+
+The notebook used to simulate the data using the configuration settings stored in `notebooks/settings.json`.
+The json file defines various parameters for the simulation.
+
+Note that the data is simulated by sampling from normal distribution using fixed seed. 
+Changes to the code in this notebook are likely to change the simulated data.
+
+The rest of the notebook are organized by how many human raters and systems are used in each analyses. 
+
+Note that the structure of the notebooks does not follow the order of analyses in the paper:
+in the paper we first show the gaps in traditional metrics and then demonstrate that PRMSE can help address those.
+In the notebooks, it is more efficient to keep the analyses with and without PRMSE in the same notebook as long as they use the same data. 
+
+`exp_1A2H` - evaluations of the same system against multiple pairs of raters
+
+`exp_NA2H` - evaluations of multiple systems against different pairs of raters
 
 ## Data
 

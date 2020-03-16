@@ -1,7 +1,7 @@
 {"N_responses": 10000,
 "true_score_mean": 3.844,
 "true_score_sd": 0.74,
-"rater_rhos": [0.4, 0.55, 0.6, 0.8], 
+"rater_rhos": [0.4, 0.55, 0.65, 0.8], 
 "n_raters": [50, 50, 50, 50],
 "score_range": [1, 6],
 "rater_categories": ["low", "moderate", "average", "high"],
