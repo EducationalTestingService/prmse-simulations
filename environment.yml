@@ -1,0 +1,25 @@
+name: prmse
+channels:
+  - conda-forge
+  - ets
+dependencies:
+  - doc2dash
+  - jupyter
+  - nose
+  - notebook
+  - numpy
+  - pandas
+  - seaborn
+  - skll==2.0.0
+  - statsmodels
+  - coverage
+  - coveralls
+  - openpyxl
+  - parameterized
+  - sphinx
+  - sphinx_rtd_theme
+  - xlrd
+  - xlwt
+  - pip
+  - pip:
+    - "-e git+https://github.com/EducationalTestingService/rsmtool@generalized-version-of-prmse#egg=rsmtool"
