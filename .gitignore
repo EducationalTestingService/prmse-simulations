@@ -1,0 +1,17 @@
+*.pyc
+*.pyo
+*.egg
+*.egg-info/
+*.ipynb_checkpoints
+
+.DS_Store
+.coverage
+
+*dist/
+*build/
+*static/
+*test_outputs/
+
+__pycache__
+/prmse.sublime-workspace
+/prmse.sublime-project
