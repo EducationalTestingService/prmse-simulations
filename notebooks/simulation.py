@@ -441,10 +441,39 @@ class Dataset:
                 assigned by the simulated rater with ID `h_X`. There are
                 ``num_raters_per_category`` * len(rater_categories)``
                 such columns.
-            3. ``sts_X`` : this column contains the score for each response
+            3. ``sys_X`` : this column contains the score for each response
                 assigned by the simulated system with ID `sys_X`. There are
                 ``num_systems_per_category`` * len(system_categories)``
                 such columns.
+        df_rater_metadata : pandas.DataFrame
+            The data frame containing the metadata for the simulated human
+            raters in the dataset. Each row corresponds to one of the
+            simulated human raters. It has the following columns:
+            1. ``rater_id`` : this column contains an ID for the simulated
+                rater. It is of the form `h_X`, where X goes from 1 to
+                ``num_raters_per_category`` * len(rater_categories)``.
+            2. ``error_sd`` : this column contains the value of the error
+                std. dev. that was used to simulate the scores for each
+                rater. This value was chosen as to get a mean inter-rater
+                correlation within this rater's category to be as close
+                as possible to the desired rho value for the category.
+            3. ``rater_category`` : this column contains the category
+                label that this simulated human rater belongs to.
+            4. ``expected_rho`` : this column contains the desired rho
+                for the rater category that this simulated rater
+                belongs to.
+        df_system_metadata : pandas.DataFrame:
+            The data frame containing the metadata for the simulated human
+            raters in the dataset. Each row corresponds to one of the
+            simulated human raters. It has the following columns:
+            1. ``system_Id`` : this column contains an ID for the simulated
+                system. It is of the form `sys_X`, where X goes from 1 to
+                ``num_systems_per_category`` * len(system_categories)``.
+            2. ``system_category`` : this column contains the category
+                label that this simulated system belongs to.
+            3. ``expected_r2_true`` : this column contains the desired R^2
+                for the system category that this simulated system
+                belongs to.
         """
         # first generate the true scores
         sys.stderr.write('generating true scores ...\n')
