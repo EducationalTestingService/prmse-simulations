@@ -1,0 +1,13 @@
+{"N_responses": 10000,
+"true_score_mean": 3.844,
+"true_score_sd": 0.74,
+"rater_rhos": [0.4, 0.55, 0.65, 0.8], 
+"n_raters": [50, 50, 50, 50],
+"score_range": [1, 6],
+"rater_categories": ["low", "moderate", "average", "high"],
+"system_categories": ["poor", "low", "medium", "high", "perfect"],
+"key_steps_n_raters":[1, 2, 5, 10, 25, 50],
+"system_r2": [0, 0.4, 0.65, 0.8, 0.99],
+"n_systems": [5, 5, 5, 5, 5],
+"sample_system": "sys_17"
+}
