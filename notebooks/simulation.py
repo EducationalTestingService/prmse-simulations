@@ -6,10 +6,10 @@ Module containing the classes needed for PRMSE simulations.
 :organization: ETS
 :date: March 2020
 """
-import json
-import logging
 import sys
+from pathlib import Path
 
+import joblib
 import numpy as np
 import pandas as pd
 
@@ -109,20 +109,25 @@ class Dataset:
         self._system_scores = []
         self._system_metadata = []
 
-        # and we need a logger
-        self.logger = logging.getLogger(__name__)
-
     @classmethod
     def from_dict(cls, argdict):
         """Create a ``Dataset`` instance from the given dictionary."""
         return cls(**argdict)
 
     @classmethod
-    def from_file(cls, input_file):
-        """Create a ``Dataset`` instance from the given dictionary."""
-        with open(input_file, 'r') as inputfh:
-            argdict = json.load(inputfh)
-            return cls.from_dict(argdict)
+    def from_file(cls, dataset_path):
+        """Load ``Dataset`` instance from disk."""
+        dataset = joblib.load(dataset_path)
+        return dataset
+
+    def save(self, dataset_path):
+        """Save ``Dataset`` instance to disk."""
+        # create the directory if it doesn't exist
+        dataset_dir = Path(dataset_path).parent
+        if not dataset_dir.exists():
+            dataset_dir.mkdir(parents=True)
+        # write out the dataset to disk
+        joblib.dump(self, dataset_path)
 
     def __str__(self):
         """Return a string representation of Dataset."""
@@ -417,15 +422,36 @@ class Dataset:
                                               "system_category": system_category,
                                               "expected_r2_true": r2})
 
-    def generate(self):
+    def fit(self):
         """
-        Generate and return the true, rater, and system scores.
+        Generate the simualted true, rater, and system scores.
 
-        This is the primary public method for the ``Dataset`` class.
         This method generates the simulated true scores, generates the
         simulated rater scores (and metadata), and generates the simulate
-        system scores (and metadata). It then collates all of this information
-        into 3 different data frames and returns them.
+        system scores (and metadata).
+        """
+        # first generate the true scores
+        sys.stderr.write('generating true scores ...\n')
+        self._generate_true_scores(12345)
+
+        # generate the rater scores and metadata if they don't already
+        # exist or if ``force`` is specified
+        sys.stderr.write('generating rater scores and metadata ...\n')
+        self._generate_rater_scores_and_metadata(34567)
+
+        # generate the system scores and metadata if they don't already
+        # exist or if ``force`` is specified
+        sys.stderr.write('generating system scores and metadata ...\n')
+        self._generate_system_scores_and_metadata(67890)
+
+    def to_frames(self):
+        """
+        Return data frames representing this dataset.
+
+        This method generates three data frames containing the simulated
+        scores and metadata in this dataset. Note that this method should
+        only be called after the dataset has been ``fit()`` and all the
+        underlying simulated scores have been generated.
 
         Returns
         -------
@@ -474,37 +500,47 @@ class Dataset:
             3. ``expected_r2_true`` : this column contains the desired R^2
                 for the system category that this simulated system
                 belongs to.
+
+        Raises
+        ------
+        RuntimeError
+            If ``fit()`` has not already been called.
         """
-        # first generate the true scores
-        sys.stderr.write('generating true scores ...\n')
-        self._generate_true_scores(12345)
+        if (self._true_scores is None or
+                len(self._rater_scores) == 0 or
+                len(self._system_scores) == 0):
 
-        # generate the rater scores and metadata
-        sys.stderr.write('generating rater scores and metadata ...\n')
-        self._generate_rater_scores_and_metadata(34567)
+            raise RuntimeError("This method must be called after the dataset "
+                               "has been fit. Call ``self.fit()`` before calling "
+                               "this method.")
+        else:
 
-        # generate the system scores and metadata
-        sys.stderr.write('generating system scores and metadata ...\n')
-        self._generate_system_scores_and_metadata(67890)
+            sys.stderr.write('creating data frames ...')
 
-        # create the dataframes we want to return
-        sys.stderr.write('creating data frames ...\n')
-        data_dict = {}
-        data_dict['response_id'] = [f"id_{num_response + 1}" for num_response
-                                    in range(self.num_responses)]
-        data_dict['true'] = self._true_scores
+            # initialize a dictionary that will hold the various scores
+            data_dict = {}
 
-        for rater_scores, rater_metadata in zip(self._rater_scores,
-                                                self._rater_metadata):
-            data_dict[rater_metadata['rater_id']] = rater_scores
+            # create some IDs for the hypothetical responses in the dataset
+            data_dict['response_id'] = [f"id_{num_response + 1}" for num_response
+                                        in range(self.num_responses)]
 
-        for system_scores, _system_metadata in zip(self._system_scores,
-                                                   self._system_metadata):
-            data_dict[_system_metadata['system_id']] = system_scores
+            # save the true scores
+            data_dict['true'] = self._true_scores
 
-        df_scores = pd.DataFrame(data_dict)
-        df_rater_metadata = pd.DataFrame.from_records(self._rater_metadata)
-        df_system_metadata = pd.DataFrame.from_records(self._system_metadata)
-        sys.stderr.write('done\n')
+            # save the rater scores
+            for rater_scores, rater_metadata in zip(self._rater_scores,
+                                                    self._rater_metadata):
+                data_dict[rater_metadata['rater_id']] = rater_scores
 
-        return df_scores, df_rater_metadata, df_system_metadata
+            # save the system scores
+            for system_scores, _system_metadata in zip(self._system_scores,
+                                                       self._system_metadata):
+                data_dict[_system_metadata['system_id']] = system_scores
+
+            # create the data frames we will return
+            df_scores = pd.DataFrame(data_dict)
+            df_rater_metadata = pd.DataFrame.from_records(self._rater_metadata)
+            df_system_metadata = pd.DataFrame.from_records(self._system_metadata)
+            sys.stderr.write(' done\n')
+
+            return df_scores, df_rater_metadata, df_system_metadata
