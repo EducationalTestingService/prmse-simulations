@@ -220,7 +220,41 @@ def compute_prmse(df_scores, system_id, rater_pairs):
         # call the per-pair function
         prmse_for_this_pair = prmse_true(df_scores[system_id],
                                          df_scores[[rater_id1, rater_id2]])
-        # save the returned lists of serie
+        # save the returned lists of series
         prmse_for_all_pairs.append(prmse_for_this_pair)
 
     return prmse_for_all_pairs
+
+
+def compute_cumulative_mean_for_raters(df_scores, rater_ids):
+    """
+    Compute cumulative average of given rater's scores.
+
+    This function computes the cumulative average of scores
+    assigned by the raters identified by the given list of
+    ``rater_ids``. The cumulative average is computed by
+    adding one rater at a time.
+
+    Parameters
+    ----------
+    df_scores : pandas DataFrame
+        The data frame containing the simulated scores.
+        This is usually one of the data frames returned
+        by the ``simulation.dataset.Dataset.to_frame()``
+        method.
+    rater_ids : numpy.ndarray
+        An array of simulated rater IDs whose scores want
+        to compute the cumulative average over.
+
+    Returns
+    -------
+    df_cumulative_mean_scores : pandas.DataFrame
+        A data frame containing the cumulative average rater scores.
+        It has ``len(df_scores)`` rows and ``len(rater_ids`` columns.
+        Each of the columns is named ``N=n``, where n is the number of
+        raters included in computing the cumulative average.
+    """
+    df_rater_scores = df_scores[rater_ids]
+    df_cumulative_average_scores = df_rater_scores.expanding(1, axis=1).mean()
+    df_cumulative_average_scores.columns = [f"N={num_raters+1}" for num_raters in range(len(rater_ids))]
+    return df_cumulative_average_scores
