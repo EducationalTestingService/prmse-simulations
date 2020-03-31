@@ -178,3 +178,49 @@ def compute_conventional_agreement_metrics(df_scores, system_id, rater_pairs):
     df_metrics = pd.DataFrame(metrics_for_all_pairs)
 
     return df_metrics
+
+
+def compute_prmse(df_scores, system_id, rater_pairs):
+    """
+    Compute the PRMSE score for the system against all given rater pairs.
+
+    This function computes the value of the PRMSE metric between
+    the scores of the given system (``system_id``) against the scores
+    assigned by the two simulated raters ``rater_id1`` and ``rater_id2``.
+
+    Parameters
+    ----------
+    df_scores : pandas.DataFrame
+        The data frame containing the simulated scores.
+        This is usually one of the data frames returned
+        by the ``simulation.dataset.Dataset.to_frame()``
+        method.
+    system_id : str
+        The ID for the simulated system to be evaluated.
+        This must be a column in ``df_scores``.
+        Description
+    rater_pairs : list of lists of str
+        A list containing rater pairs against which
+        the system is to be evaluated. Each rater
+        pair is a list of rater ID, e.g.,
+        ``[h_1, h_33]``.
+
+    Returns
+    -------
+    prmse_values : list of float
+        A list containing the values for the PRMSE metric
+        for each of the given rater pairs.
+    """
+    # initialize a list that will hold the series
+    prmse_for_all_pairs = []
+
+    # iterate over each given rater pair
+    for rater_id1, rater_id2 in rater_pairs:
+
+        # call the per-pair function
+        prmse_for_this_pair = prmse_true(df_scores[system_id],
+                                         df_scores[[rater_id1, rater_id2]])
+        # save the returned lists of serie
+        prmse_for_all_pairs.append(prmse_for_this_pair)
+
+    return prmse_for_all_pairs
