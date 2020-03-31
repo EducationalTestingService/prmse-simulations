@@ -515,8 +515,6 @@ class Dataset:
                                "this method.")
         else:
 
-            sys.stderr.write('creating data frames ...')
-
             # initialize a dictionary that will hold the various scores
             data_dict = {}
 
@@ -541,6 +539,5 @@ class Dataset:
             df_scores = pd.DataFrame(data_dict)
             df_rater_metadata = pd.DataFrame.from_records(self._rater_metadata)
             df_system_metadata = pd.DataFrame.from_records(self._system_metadata)
-            sys.stderr.write(' done\n')
 
             return df_scores, df_rater_metadata, df_system_metadata
