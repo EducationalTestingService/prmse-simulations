@@ -40,7 +40,11 @@ def get_rater_pairs(rater_ids, num_pairs, seed=1234567890):
     return [pair.split('+') for pair in chosen_pairs]
 
 
-def compute_agreements_for_rater_pair(df_scores, system_id, rater_id1, rater_id2):
+def compute_agreement_one_system_one_rater_pair(df_scores,
+                                                system_id,
+                                                rater_id1,
+                                                rater_id2,
+                                                include_mean=False):
     """
     Evaluate the given system against the given pair of raters.
 
@@ -49,11 +53,11 @@ def compute_agreements_for_rater_pair(df_scores, system_id, rater_id1, rater_id2
     assigned by the two simulated raters ``rater_id1`` and ``rater_id2``.
 
     The agreement metrics computed are: Pearson's correlation, adjusted R^2,
-    quadratically-weighted kappa, and the difference between the human-machine
-    Pearson correlation and the human-human Pearson correlation (commonly
+    quadratically-weighted kappa, and the difference between the human-human
+    Pearson correlation and the human-machine Pearson correlation (commonly
     known as "degradation"). All 4 metrics are computed against the scores
-    of the first rater in the pair as well as against the average of the scores
-    assigned by both raters in the pair.
+    of the first rater in the pair and, if ``include_mean`` is ``True``, also
+    against the average of the scores assigned by both raters in the pair.
 
     Parameters
     ----------
@@ -72,23 +76,31 @@ def compute_agreements_for_rater_pair(df_scores, system_id, rater_id1, rater_id2
     rater_id2 : str
         The ID for the second rater in the rater pair
         being used to evaluate the given system.
+    include_mean : bool, optional
+        If set to ``True``, also include the metric values
+        computed against the average of the scores assigned
+        by both raters in the given pair.
 
     Returns
     -------
     metrics_series : list of pandas.Series
-        A list containing two pandas series : the first containing
-        the values of the metrics against the average of the two
-        rater scores and the second containing the value of the
-        metrics against the scores of the first rater. Each series
-        contains the following columns:
+        A list containing 1 or 2 pandas series depending on the value
+        of ``include_mean``. If it is ``True``, this list contains
+        two series:  the first containing the values of the metrics
+        against the average of the two rater scores and the second
+        containing the value of the metrics against the scores of
+        the first rater. If ``include_mean`` is ``False``, this list
+        only contains a single series - that containing the metric
+        values against the scores of the first rater. Any series
+        returned contain the following columns:
         1. "r" - the Pearson's correlation between the system score
            and the average and the first rater scores.
         2. "QWK" - the quadratically-weighted kapp between the system score
            and the average and the first rater scores.
         3. "R2" - the R^2 score between the system score
            and the average and the first rater scores.
-        4. "degradation" - the difference between the human-machine correlation
-           score and the rater1-rater2 correlation score.
+        4. "degradation" - the difference between the human-human correlation
+           score and the system's correlation score.
         5. "reference" - a column containing whether the metric values were
            computed against the average of the two rater scores (``h1-h2 mean``)
            or the first rater scores (``h1``).
@@ -99,33 +111,40 @@ def compute_agreements_for_rater_pair(df_scores, system_id, rater_id1, rater_id2
     # we only want these 3 metrics to start with
     chosen_metrics = ['wtkappa', 'corr', 'R2']
 
-    # compute the metrics against the average ot the two rater scores as a series
-    mean_metric_values = Analyzer.metrics_helper(df_scores[[rater_id1, rater_id2]].mean(axis=1),
-                                                 df_scores[system_id])
-    mean_metric_values = mean_metric_values[chosen_metrics]
-
     # compute the metrics against the first rater as a series
     h1_metric_values = Analyzer.metrics_helper(df_scores[rater_id1], df_scores[system_id])
     h1_metric_values = h1_metric_values[chosen_metrics]
 
     # compute the degradation values
-    mean_metric_values['degradation'] = mean_metric_values['corr'] - rater1_rater2_correlation
-    h1_metric_values['degradation'] = h1_metric_values['corr'] - rater1_rater2_correlation
+    h1_metric_values['degradation'] = rater1_rater2_correlation - h1_metric_values['corr']
 
     # add a new column called "reference" indicating whether we used
     # the h1-h2 average score for just the h1 score
-    mean_metric_values['reference'] = 'h1-h2 mean'
     h1_metric_values['reference'] = 'h1'
 
     # rename some of the metrics to have more recognizable names
-    mean_metric_values.rename({'wtkappa': 'QWK', 'corr': 'r'}, inplace=True)
     h1_metric_values.rename({'wtkappa': 'QWK', 'corr': 'r'}, inplace=True)
 
-    # return the two metric series
-    return [mean_metric_values, h1_metric_values]
+    # compute the metrics against the average ot the two rater scores
+    # as a series if it was requested
+    if include_mean:
+        mean_metric_values = Analyzer.metrics_helper(df_scores[[rater_id1, rater_id2]].mean(axis=1),
+                                                     df_scores[system_id])
+        mean_metric_values = mean_metric_values[chosen_metrics]
+
+        mean_metric_values['degradation'] = rater1_rater2_correlation - mean_metric_values['corr']
+        mean_metric_values['reference'] = 'h1-h2 mean'
+        mean_metric_values.rename({'wtkappa': 'QWK', 'corr': 'r'}, inplace=True)
+
+    # return the right number of metric series
+    ans = [mean_metric_values, h1_metric_values] if include_mean else [h1_metric_values]
+    return ans
 
 
-def compute_conventional_agreement_metrics(df_scores, system_id, rater_pairs):
+def compute_agreement_one_system_multiple_rater_pairs(df_scores,
+                                                      system_id,
+                                                      rater_pairs,
+                                                      include_mean=False):
     """
     Compute agreement for system against all given rater pairs.
 
@@ -133,8 +152,8 @@ def compute_conventional_agreement_metrics(df_scores, system_id, rater_pairs):
     between the scores of the given system (``system_id``) against the scores
     assigned by the two simulated raters ``rater_id1`` and ``rater_id2``.
 
-    This function simply calls the ``compute_agreements_for_rater_pair()``
-    function for each rater pair function and combines the output. Refer
+    This function simply calls the ``compute_agreement_one_system_one_rater_pair()``
+    function for each rater pair and combines the output. Refer
     to ``compute_agreements_for_rater_pair()`` for more details.
 
     Parameters
@@ -153,6 +172,10 @@ def compute_conventional_agreement_metrics(df_scores, system_id, rater_pairs):
         the system is to be evaluated. Each rater
         pair is a list of rater ID, e.g.,
         ``[h_1, h_33]``.
+    include_mean : bool, optional
+        If set to ``True``, also include the metric values
+        computed against the average of the scores assigned
+        by both raters in the given pair.
 
     Returns
     -------
@@ -167,10 +190,11 @@ def compute_conventional_agreement_metrics(df_scores, system_id, rater_pairs):
     for rater_id1, rater_id2 in rater_pairs:
 
         # call the per-pair function
-        metrics_for_this_pair = compute_agreements_for_rater_pair(df_scores,
-                                                                  system_id,
-                                                                  rater_id1,
-                                                                  rater_id2)
+        metrics_for_this_pair = compute_agreement_one_system_one_rater_pair(df_scores,
+                                                                            system_id,
+                                                                            rater_id1,
+                                                                            rater_id2,
+                                                                            include_mean=include_mean)
         # save the returned lists of serie
         metrics_for_all_pairs.extend(metrics_for_this_pair)
 
@@ -180,7 +204,70 @@ def compute_conventional_agreement_metrics(df_scores, system_id, rater_pairs):
     return df_metrics
 
 
-def compute_prmse(df_scores, system_id, rater_pairs):
+def compute_agreement_multiple_systems_one_rater_pair(df_scores,
+                                                      system_ids,
+                                                      rater_id1,
+                                                      rater_id2,
+                                                      include_mean=False):
+    """
+    Compute agreement for given systems against the given rater pair.
+
+    This function computes the values of conventional metrics of agreement
+    between the scores of the given list of systems (with IDs ``system_ids``)
+    against the scores assigned by the two simulated raters ``rater_id1``
+    and ``rater_id2``.
+
+    This function simply calls the ``compute_agreement_one_system_one_rater_pair()``
+    function for each system and combines the output. Refer to
+    ``compute_agreements_for_rater_pair()`` for more details.
+
+    Parameters
+    ----------
+    df_scores : pandas.DataFrame
+        The data frame containing the simulated scores.
+        This is usually one of the data frames returned
+        by the ``simulation.dataset.Dataset.to_frame()``
+        method.
+    system_ids : list of str
+        The list of IDs of the simulated systems to be evaluated.
+        Each ID must be a column in ``df_scores``.
+    rater_id1 : str
+        The ID for the first rater in the rater pair
+        being used to evaluate the given system.
+        This must be a column in ``df_scores``.
+    rater_id2 : str
+        The ID for the second rater in the rater pair
+        being used to evaluate the given system.
+
+    Returns
+    -------
+    data frame
+        Description
+    """
+    # initialize an empty list we will use to save each system ID's results
+    metrics = []
+
+    # iterate over each system ID
+    for system_id in system_ids:
+
+        # compute the metric series for this system ID against the rater pair
+        metric_series = compute_agreement_one_system_one_rater_pair(df_scores,
+                                                                    system_id,
+                                                                    rater_id1,
+                                                                    rater_id2,
+                                                                    include_mean=include_mean)
+        # save the current system ID in the same series
+        for series in metric_series:
+            series['system_id'] = system_id
+
+        # save the series in the list
+        metrics.extend(metric_series)
+
+    # convert the list of series into a data frame and return
+    return pd.DataFrame(metrics)
+
+
+def compute_prmse_one_system_multiple_rater_pairs(df_scores, system_id, rater_pairs):
     """
     Compute the PRMSE score for the system against all given rater pairs.
 
@@ -258,3 +345,45 @@ def compute_cumulative_mean_for_raters(df_scores, rater_ids):
     df_cumulative_average_scores = df_rater_scores.expanding(1, axis=1).mean()
     df_cumulative_average_scores.columns = [f"N={num_raters+1}" for num_raters in range(len(rater_ids))]
     return df_cumulative_average_scores
+
+
+def compute_ranks_from_metrics(df_metrics):
+    """
+    Compute ranks given metric values for systems.
+
+    This function computes ranks for a list of systems
+    according to different metrics present in the given
+    data frame.
+
+    Parameters
+    ----------
+    df_metrics : pandas.DataFrame
+        A data frame with one row for each system to be ranked and
+        the following columns:
+        1. "system_id" : the ID of the system
+        2. "system_category" : the performance category that the system belongs to.
+        3. At least one other column containing values for a metric with the name
+       of the metric being the column name. For example, "QWK" or "PRMSE" etc. 
+
+    Returns
+    -------
+    df_metric_ranks : pandas.DataFrame
+        A data frame with the same number of rows and columns as the input
+        data frame except that the values in each "metric" column are now the
+        ranks of the systems rather than the metric values themselves.
+    """
+    # first we set our indices to be the system IDs and categories so that they are
+    # retained when we compute the ranks for the systems
+    df_metrics_for_ranks = df_metrics.set_index(['system_category', 'system_id'])
+
+    # if degradation is one of the metrics, multiply it by -1 to make it behave'
+    # like other metrics for ranking purposes
+    if "degradation" in df_metrics_for_ranks.columns:
+        df_metrics_for_ranks['degradation'] = -1 * df_metrics_for_ranks['degradation']
+
+    # compute the ranks in descending order since lower ranks are better;
+    # also reset the indices so that we get the IDs and categories back
+    df_metric_ranks = df_metrics_for_ranks.rank(ascending=False).reset_index()
+
+    # return the data frame
+    return df_metric_ranks
