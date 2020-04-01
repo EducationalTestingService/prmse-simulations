@@ -92,7 +92,7 @@ def compute_agreement_one_system_one_rater_pair(df_scores,
         the first rater. If ``include_mean`` is ``False``, this list
         only contains a single series - that containing the metric
         values against the scores of the first rater. Any series
-        returned contain the following columns:
+        returned will contains the following columns:
         1. "r" - the Pearson's correlation between the system score
            and the average and the first rater scores.
         2. "QWK" - the quadratically-weighted kapp between the system score
@@ -100,13 +100,20 @@ def compute_agreement_one_system_one_rater_pair(df_scores,
         3. "R2" - the R^2 score between the system score
            and the average and the first rater scores.
         4. "degradation" - the difference between the human-human correlation
-           score and the system's correlation score.
+           score and the system's correlation score. Note that this column may
+           not be included in the output if any of the scores for either of the
+           two simulated raters are null, e.g., if some of the responses are
+           single scored.
         5. "reference" - a column containing whether the metric values were
            computed against the average of the two rater scores (``h1-h2 mean``)
            or the first rater scores (``h1``).
     """
     # compute the inter-rater correlation that we need for degradation
-    rater1_rater2_correlation = pearsonr(df_scores[rater_id1], df_scores[rater_id2])[0]
+    try:
+        rater1_rater2_correlation = pearsonr(df_scores[rater_id1], df_scores[rater_id2])[0]
+    except ValueError:
+        rater1_rater2_correlation = None
+        pass
 
     # we only want these 3 metrics to start with
     chosen_metrics = ['wtkappa', 'corr', 'R2']
@@ -116,7 +123,8 @@ def compute_agreement_one_system_one_rater_pair(df_scores,
     h1_metric_values = h1_metric_values[chosen_metrics]
 
     # compute the degradation values
-    h1_metric_values['degradation'] = rater1_rater2_correlation - h1_metric_values['corr']
+    if rater1_rater2_correlation:
+        h1_metric_values['degradation'] = rater1_rater2_correlation - h1_metric_values['corr']
 
     # add a new column called "reference" indicating whether we used
     # the h1-h2 average score for just the h1 score
@@ -132,7 +140,8 @@ def compute_agreement_one_system_one_rater_pair(df_scores,
                                                      df_scores[system_id])
         mean_metric_values = mean_metric_values[chosen_metrics]
 
-        mean_metric_values['degradation'] = rater1_rater2_correlation - mean_metric_values['corr']
+        if rater1_rater2_correlation:
+            mean_metric_values['degradation'] = rater1_rater2_correlation - mean_metric_values['corr']
         mean_metric_values['reference'] = 'h1-h2 mean'
         mean_metric_values.rename({'wtkappa': 'QWK', 'corr': 'r'}, inplace=True)
 
@@ -180,7 +189,7 @@ def compute_agreement_one_system_multiple_rater_pairs(df_scores,
     Returns
     -------
     df_metrics : pandas.DataFrame
-        A pandas DataFrames which has the same columns as the series
+        A pandas data frame which has the same columns as the series
         returned by ``compute_agreements_for_rater_pair()``.
     """
     # initialize a list that will hold the series
@@ -238,6 +247,7 @@ def compute_agreement_multiple_systems_one_rater_pair(df_scores,
     rater_id2 : str
         The ID for the second rater in the rater pair
         being used to evaluate the given system.
+        This must be a column in ``df_scores``.
 
     Returns
     -------
@@ -324,7 +334,7 @@ def compute_cumulative_mean_for_raters(df_scores, rater_ids):
 
     Parameters
     ----------
-    df_scores : pandas DataFrame
+    df_scores : pandas.DataFrame
         The data frame containing the simulated scores.
         This is usually one of the data frames returned
         by the ``simulation.dataset.Dataset.to_frame()``
@@ -387,3 +397,73 @@ def compute_ranks_from_metrics(df_metrics):
 
     # return the data frame
     return df_metric_ranks
+
+
+def simulate_percent_double_scored(df_scores, rater_id1, rater_id2, percentage):
+    """
+    Simulate a dataset with only given percentage of double-scored responses.
+
+    This function takes two given rater IDs and a percentage value and returns
+    a data frame that contains the scores from only those two simulated raters
+    with the additional constraint that only a certain percentage of the
+    hypothetical responses in the dataset have a score from the second rater
+    and the remaining responses have the scores from the second rater set
+    to ``NaN``.
+
+    Parameters
+    ----------
+    df_scores : pandas.DataFrame
+        The data frame containing the simulated scores.
+        This is usually one of the data frames returned
+        by the ``simulation.dataset.Dataset.to_frame()``
+        method.
+    rater_id1 : str
+        The ID for the first rater in the rater pair
+        being used to evaluate the given system.
+        This must be a column in ``df_scores``.
+    rater_id2 : str
+        The ID for the second rater in the rater pair
+        being used to evaluate the given system.
+        This must be a column in ``df_scores``.
+    percentage : float
+        The percentage of randomly chosen responses in the dataset
+        that should still have scores from both raters.
+
+    Returns
+    -------
+    df_rater_pair_scores : pandas.DataFrame
+        A data frame containing the same number of rows as ``df_scores`` but
+        only two columns : ``rater_id1`` and ``rater_id2``. Only ``percentage``
+        percent of responses in the ``rater_id2`` column have valid scores
+        with the rest set to ``Nan``.
+    num_double_scored : int
+        The number of double-scored responses in the returned data frame.
+    """
+    # initialize a random number generator
+    prng = np.random.RandomState(987654321)
+
+    # create a data frame that only has the scores from the raters in the given pair
+    df_rater_pair_scores = df_scores[[rater_id1, rater_id2]].copy()
+
+    # stochastically mask the second rater's scores unless we want 100% double-scored
+    if percentage < 100:
+
+        # calculate the number of responses we want to simulate as double scored
+        num_double_scored = int(percentage / 100 * len(df_rater_pair_scores))
+
+        # randomly choose this many number of responses
+        chosen = prng.choice(df_rater_pair_scores.index.values,
+                             size=num_double_scored,
+                             replace=False)
+
+        # for all the other responses in the dataset, set the second rater's score to null
+        # that is, make them single scored
+        df_rater_pair_scores.loc[~df_rater_pair_scores.index.isin(chosen), rater_id2] = np.nan
+
+    else:
+
+        # if the percentge is 100%, then the whole dataset is double-scored
+        # and we don't need to do anything else
+        num_double_scored = len(df_rater_pair_scores)
+
+    return df_rater_pair_scores, num_double_scored
