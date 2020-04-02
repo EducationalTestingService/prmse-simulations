@@ -441,7 +441,7 @@ class Dataset:
 
     def fit(self):
         """
-        Generate the simualted true, rater, and system scores.
+        Generate the simulated true, rater, and system scores.
 
         This method generates the simulated true scores, generates the
         simulated rater scores (and metadata), and generates the simulate

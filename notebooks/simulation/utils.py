@@ -211,7 +211,7 @@ def compute_agreement_one_system_multiple_rater_pairs(df_scores,
                                                                             rater_id1,
                                                                             rater_id2,
                                                                             include_mean=include_mean)
-        # save the returned lists of serie
+        # add the returned series to the list of all metrics
         metrics_for_all_pairs.extend(metrics_for_this_pair)
 
     # create a data frame from the lists of series
