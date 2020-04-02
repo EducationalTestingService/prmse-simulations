@@ -129,6 +129,23 @@ class Dataset:
         # write out the dataset to disk
         joblib.dump(self, dataset_path)
 
+    def save_frames(self, output_dir):
+        """Save the frames obtained via ``to_frames()`` to disk."""
+        # create the directory if it doesn't exist
+        output_dir = Path(output_dir)
+        if not output_dir.exists():
+            output_dir.mkdir(parents=True)
+
+        # get the 3 data frames representing the dataset
+        (df_scores,
+         df_rater_metadata,
+         df_system_metadata) = self.to_frames()
+
+        # write out each of the frames to disk
+        df_scores.to_csv(output_dir / 'scores.csv', index=False)
+        df_rater_metadata.to_csv(output_dir / 'rater_metadata.csv', index=False)
+        df_system_metadata.to_csv(output_dir / 'system_metadata.csv', index=False)
+
     def __str__(self):
         """Return a string representation of Dataset."""
         ans = "Dataset ("
