@@ -1,4 +1,11 @@
-"""Utility functions for PRMSE simulatione experiments."""
+"""
+Module containing utility functions needed for PRMSE simulations.
+
+:author: Nitin Madnani
+:author: Anastassia Loukina
+:organization: ETS
+:date: March 2020
+"""
 
 import itertools
 

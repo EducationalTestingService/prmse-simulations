@@ -1,5 +1,5 @@
 """
-Module containing the classes needed for PRMSE simulations.
+Module containing the Dataset class needed for PRMSE simulations.
 
 :author: Nitin Madnani
 :author: Anastassia Loukina
