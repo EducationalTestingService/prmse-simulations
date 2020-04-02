@@ -184,26 +184,23 @@ class Dataset:
                                     )
         return truncated_scores
 
-    def _add_noise_to_scores(self,
-                             scores,
-                             error_sd,
-                             seed,
-                             round=True,
-                             truncate=True):
+    def _add_noise_to_true_scores(self,
+                                  error_sd,
+                                  seed,
+                                  round=True,
+                                  truncate=True):
         """
-        Add noise/error to the given scores.
+        Add noise/error to the simulated true scores.
 
         The noise/error terms are computed by sampling from a normal distribution
         with a mean of 0 and the given error std. dev.
 
         This method is useful for generating scores assigned by a hypothetical
-        human or automated rater that are usually defined as true scores + error
-        in measurement theory.
+        human or automated rater that are usually defined in test theory as
+        true scores + measurement error.
 
         Parameters
         ----------
-        scores : numpy.ndarray
-            The scores to which noise is to be added
         error_sd : float
             The std. dev. of the error term.
         seed : int
@@ -231,7 +228,7 @@ class Dataset:
         sampled_errors = prng.normal(0, error_sd, self.num_responses)
 
         # add the error terms to the true scores and round
-        computed_scores = scores + sampled_errors
+        computed_scores = self._true_scores + sampled_errors
 
         # if requested, round the scores to integers first
         rounded_scores = np.round(computed_scores) if round else computed_scores
@@ -248,7 +245,7 @@ class Dataset:
         This method simulates true scores based on the pre-defined
         mean and standard deviation. The scores are sampled from the
         normal distribution defined by ``train_score_mean`` and
-        ``train_score_sd``. and are truncted to be in the range
+        ``train_score_sd`` and are truncated to be in the range
         [``min_score``, ``max_score``].
 
         The generated scores are saved in the private ``_true_scores``
@@ -322,9 +319,8 @@ class Dataset:
             # and save them in the list we instantiated above
             for num_rater in range(self.num_raters_per_category):
                 rater_seed = num_rater * 25
-                scores_for_this_rater = self._add_noise_to_scores(self._true_scores,
-                                                                  error_sd,
-                                                                  error_seed + rater_seed)
+                scores_for_this_rater = self._add_noise_to_true_scores(error_sd,
+                                                                       error_seed + rater_seed)
                 scores_for_all_raters.append(pd.Series(scores_for_this_rater))
 
             # convert the 50 x 10000 matrix into a dataframe for convenience
@@ -381,14 +377,12 @@ class Dataset:
             # from the seed we used for searching for the error sd value
             for num_rater in range(self.num_raters_per_category):
                 rater_seed = num_rater * 123
-                scores_for_this_rater = self._add_noise_to_scores(self._true_scores,
-                                                                  chosen_error_sd,
-                                                                  seed + rater_seed)
+                scores_for_this_rater = self._add_noise_to_true_scores(chosen_error_sd,
+                                                                       seed + rater_seed)
                 # save this rater's scores
                 self._rater_scores.append(scores_for_this_rater)
 
                 # save this rater's metadata
-                # which rater number is this overall, not just within the category?
                 num_rater_overall = num_rater + num_category * self.num_raters_per_category
                 self._rater_metadata.append({"rater_id": f"h_{num_rater_overall + 1}",
                                              "error_sd": chosen_error_sd,
@@ -425,21 +419,19 @@ class Dataset:
             # each system in this category with a new seed
             for num_system in range(self.num_systems_per_category):
                 system_seed = num_system * 456
-                scores_for_this_system = self._add_noise_to_scores(self._true_scores,
-                                                                   solved_error_sd,
-                                                                   seed + system_seed,
-                                                                   round=False)
+                scores_for_this_system = self._add_noise_to_true_scores(solved_error_sd,
+                                                                        seed + system_seed,
+                                                                        round=False)
                 # save this system's scores
                 self._system_scores.append(scores_for_this_system)
 
                 # save this system's metadata
-                # which system number is this overall, not just within the category?
                 num_system_overall = num_system + num_category * self.num_systems_per_category
                 self._system_metadata.append({"system_id": f"sys_{num_system_overall + 1}",
                                               "system_category": system_category,
                                               "expected_r2_true": r2})
 
-    def fit(self):
+    def generate(self):
         """
         Generate the simulated true, rater, and system scores.
 
@@ -467,7 +459,7 @@ class Dataset:
 
         This method generates three data frames containing the simulated
         scores and metadata in this dataset. Note that this method should
-        only be called after the dataset has been ``fit()`` and all the
+        only be called after the ``generate()`` has been called and all the
         underlying simulated scores have been generated.
 
         Returns
@@ -521,15 +513,15 @@ class Dataset:
         Raises
         ------
         RuntimeError
-            If ``fit()`` has not already been called.
+            If ``generate()`` has not already been called.
         """
         if (self._true_scores is None or
                 len(self._rater_scores) == 0 or
                 len(self._system_scores) == 0):
 
             raise RuntimeError("This method must be called after the dataset "
-                               "has been fit. Call ``self.fit()`` before calling "
-                               "this method.")
+                               "scores have been generated. Call ``generate()`` "
+                               "before calling this method.")
         else:
 
             # initialize a dictionary that will hold the various scores
