@@ -22,7 +22,18 @@ The paper draft is on [Overleaf](https://www.overleaf.com/3645379311byhfvpvjczht
 
 ### Data
 
-The raw data for the paper is stored in [this](https://etsorg1-my.sharepoint.com/:f:/g/personal/aloukina_ets_org/EpfEwBs2FT5Gpvfive_L3GQBrB4fV3Z5eyjve4luKarxwA?e=pf7bkg) OneDrive folder.
+The simulated datasets used in the paper are stored in `.csv` files in `data/`:
+
+`scores.csv` - simulated human and machine scores
+
+`rater_metadata.csv` - information about each "human" rater
+
+`system_metadata.csv` - information about each "system".
+
+These `.csv` files are provided for reference and will *not* be overwritten by the notebook. 
+
+The same data is also stored in `default.dataset` file: an instance of the `Dataset` class used in all simulations (see Notes below). This file *will* be overwritten if you make changes to the notebooks or settings. 
+
 
 ### Simulations
 
@@ -37,6 +48,12 @@ The code for the simulations is divided into notebooks.
 4. [`notebooks/ranking_multiple_systems.ipynb`](notebooks/ranking_multiple_systems.ipynb). In this notebook, we explore how to rank multiple automated scoring systems. Specifically, we consider the situation where we have scores from multiple different automated scoring systems, each with different levels of performance.  We evaluate these systems against the same as well as different pairs of raters and show that while all metrics can rank the systems accurately when using a single rater pair for evaluation, only PRMSE can do the same when a different rater pair is used for every system.
 
 5. [`notebooks/prmse_and_double_scoring.ipynb`](notebooks/prmse_and_double_scoring.ipynb). In this notebook, we explore the impact of the number of double-scored responses on PRMSE. We know that in order to compute PRMSE, we need at least some of the responses to have scores from two human raters. However, it may not be practical to have every single response double-scored. In this notebook, we examine how PRMSE depends on the number of double-scored responses that may be available in the dataset.
+
+### Trying your own simulations
+
+You can edit the `dataset.json` files to change the distribution of true scores and the total number of score points, to define new categories of human and system raters and to change the number of responses and/or number of raters. Remember to run `making_a_dataset.ipynb` to create your new dataset! 
+
+You are now ready to see how PRMSE will perform for your simulation.
 
 ### Notes
 
