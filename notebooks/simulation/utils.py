@@ -107,9 +107,9 @@ def compute_agreement_one_system_one_rater_pair(df_scores,
         3. "R2" - the R^2 score between the system score
            and the average and the first rater scores.
         4. "degradation" - the difference between the human-human correlation
-           score and the system's correlation score. Note that this column may
-           not be included in the output if any of the scores for either of the
-           two simulated raters are null, e.g., if some of the responses are
+           score and the human-machine correlation score. Note that this column
+           may not be included in the output if any of the scores for either of
+           the two simulated raters are null, e.g., if some of the responses are
            single scored.
         5. "reference" - a column containing whether the metric values were
            computed against the average of the two rater scores (``h1-h2 mean``)
@@ -393,7 +393,7 @@ def compute_ranks_from_metrics(df_metrics):
     # retained when we compute the ranks for the systems
     df_metrics_for_ranks = df_metrics.set_index(['system_category', 'system_id'])
 
-    # if degradation is one of the metrics, multiply it by -1 to make it behave'
+    # if degradation is one of the metrics, multiply it by -1 to make it behave
     # like other metrics for ranking purposes
     if "degradation" in df_metrics_for_ranks.columns:
         df_metrics_for_ranks['degradation'] = -1 * df_metrics_for_ranks['degradation']
