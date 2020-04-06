@@ -421,7 +421,8 @@ class Dataset:
                 system_seed = num_system * 456
                 scores_for_this_system = self._add_noise_to_true_scores(solved_error_sd,
                                                                         seed + system_seed,
-                                                                        round=False)
+                                                                        round=False,
+                                                                        truncate=False)
                 # save this system's scores
                 self._system_scores.append(scores_for_this_system)
 
