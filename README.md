@@ -50,17 +50,23 @@ The code for the simulations is divided into a set of Jupyter notebooks.
 
 ### Running your own simulations
 
-If you are intereted in running your own PRMSE simulation with different settings, you need to: 
+If you are intereted in running your own PRMSE simulations, you need to:
 
-1. Edit the [`dataset.json`](notebooks/dataset.json) files in order to: 
-    - change the number of responses in the dataset 
-    - change the distribution underlying the true scores and the total number of score points
-    - define new categories of simulated human raters and automated systems
-    - chage the number of simulated rater and/or systems per category
+1. Edit the [`dataset.json`](notebooks/dataset.json) file to change any of the following dataset-specific settings:
+    - the number of responses in the dataset (`num_responses`)
+    - the distribution underlying the true scores and the total number of score points (`true_score_mean`, `true_score_sd`, `min_score`, and `max_score`)
+    - new categories of simulated human raters and automated systems (`rater_categories`, `rater_rho_per_category`, `system_categories`, and `system_r2_per_category`)
+    - the number of simulated rater and/or systems per category (`num_raters_per_category` and `num_systems_per_category`)
 
-2. Run  the [`making_a_dataset.ipynb`](notebooks/making_a_dataset.ipynb) notebook to create and save your new dataset instance as `data/default.dataset`.
+2. Run the [`making_a_dataset.ipynb`](notebooks/making_a_dataset.ipynb) notebook to create and save your new dataset instance as `data/default.dataset`.
 
-3. Run the other notebooks above to see how PRMSE performs for your simulation settings.
+3. Edit the [`settings.json`](notebooks/settings.json) file to change any of the following notebook-specific simulation settings:
+    - `double_scored_percentages` : the percentages of double-scored responses that are simulated in [`prmse_and_double_scoring.ipynb`](notebooks/prmse_and_double_scoring.ipynb).
+    - `key_steps_n_raters` : the number of raters included in the cumulative calculations in [`multiple_raters_true_score.ipynb`](notebooks/multiple_raters_true_score.ipynb).
+    - `rater_pairs_per_category` : the pre-determined number of rater pairs per category used in  [`metric_stability.ipynb`](notebooks/metric_stability.ipynb), [`ranking_multiple_systems.ipynb`](notebooks/ranking_multiple_systems.ipynb), and [`prmse_and_double_scoring.ipynb`](notebooks/prmse_and_double_scoring.ipynb).
+    - `sample_system` : the simulated automated scoring system chosen as the source of automated scores in [`multiple_raters_true_score.ipynb`](notebooks/multiple_raters_true_score.ipynb) and [`metric_stability.ipynb`](notebooks/metric_stability.ipynb).
+
+3. Run the notebooks to see how PRMSE performs for your simulation settings.
 
 ### Important Notes
 
