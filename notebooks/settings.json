@@ -1,5 +1,6 @@
 {
-    "rater_pairs_per_category": 50,
+    "double_scored_percentages": [1, 2.5, 5, 10, 25, 50, 100],
     "key_steps_n_raters": [1, 2, 5, 10, 25, 50],
+    "rater_pairs_per_category": 50,
     "sample_system": "sys_17"
 }
