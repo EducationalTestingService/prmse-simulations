@@ -50,7 +50,7 @@ The code for the simulations is divided into a set of Jupyter notebooks.
 
 ### Running your own simulations
 
-If you are intereted in running your own PRMSE simulations, you need to:
+If you are interested in running your own PRMSE simulations, you need to:
 
 1. Edit the [`dataset.json`](notebooks/dataset.json) file to change any of the following dataset-specific settings:
     - the number of responses in the dataset (`num_responses`)
