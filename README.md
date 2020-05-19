@@ -69,3 +69,7 @@ If you are interested in running your own PRMSE simulations, you need to:
     - [`simulation/utils.py`](notebooks/simulation/dataset.py). This module contains several utility functions needed for the various simulations in the notebooks.
 
 3. Running the [`making_a_dataset.ipynb`](notebooks/making_a_dataset.ipynb) also saves three CSV files, one for each of the data frames that can be obtained by calling the `to_frames()` method on the dataset instance saved in `data/default.dataset`. Between themsleves, these 3 CSV files contain all of the simulated scores as well as the rater and system metadata. For a detailed description of each data frame, see the docstring for the `to_frames()` method of the [`Dataset`](notebooks/simulation/dataset.py) class. We make these CSV files available under `data` so that they can be examined and modified in other programs such as Excel and R. However, making changes to these CSV files will _not_ affect any analyses in any of the other notebooks as they use the `data/default.dataset` file and _not_ these CSV files.
+
+## License
+
+The code and data in this repository is released under the MIT license. 
