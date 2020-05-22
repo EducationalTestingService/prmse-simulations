@@ -72,4 +72,4 @@ If you are interested in running your own PRMSE simulations, you need to:
 
 ## License
 
-The code and data in this repository is released under the MIT license. 
+The code and data in this repository are released under the MIT license. 
