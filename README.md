@@ -1,6 +1,6 @@
 # PRMSE Simulations
 
-This repository contains the simulation code underlying the paper Loukina, A., Madnani, N. Cahill, A., Johnson, M.S., Riordan, B., and McCaffrey, D.F. [*Using PRMSE to evaluate automated scoring systems in the presence of label noise*](https://www.aclweb.org/anthology/2020.bea-1.2/), Proceedings of the Fifteenth Workshop on Innovative Use of NLP for Building Educational Applications, Seattle, 2020. 18--29.
+This repository contains the simulation code underlying the paper Loukina, A., Madnani, N. Cahill, A., Johnson, M.S., Riordan, B., and McCaffrey, D.F. [Using PRMSE to evaluate automated scoring systems in the presence of label noise](https://www.aclweb.org/anthology/2020.bea-1.2/), *Proceedings of the Fifteenth Workshop on Innovative Use of NLP for Building Educational Applications*, Seattle, 2020. 18--29.
 
 ## Getting Started
 
